@@ -74,8 +74,7 @@ class OAI_Assistant():
         """
         try:
             with open(file_name) as json_file:
-                data = json.load(json_file)
-                return data
+                return json.load(json_file)
         except FileNotFoundError:
             self.logger.debug(f"{file_name} not found.")
             return {}
@@ -103,11 +102,10 @@ class OAI_Assistant():
         Returns:
             list: A list of messages.
         """
-        if self.chat_ids == []:
-            self.logger.debug(f"No messages in thread {self.current_thread}")
-            return None
-        else:
+        if self.chat_ids != []:
             return self.chat_ids
+        self.logger.debug(f"No messages in thread {self.current_thread}")
+        return None
     
     
     
@@ -192,7 +190,7 @@ class OAI_Assistant():
                 #save the thread ID to the thread_ids.json file
                 self.add_thread(thread_name, thread_id)
                 self.current_thread = thread_id
-        
+
             #get the thread history
             self.prepare_thread_history(thread_id)
             self.current_thread = thread_id
@@ -202,13 +200,9 @@ class OAI_Assistant():
             #if the thread ID is not None, get the thread name from the thread_ids.json file
             print(f"Trying to change thread to ID {thread_id}")
             threads = self.get_threads()
-            #Object with key as thread name and value as thread ID
-            thread_name = None
-            for key, value in threads.items():
-                 if value == thread_id:
-                    thread_name = key
-                    break
-
+            thread_name = next(
+                (key for key, value in threads.items() if value == thread_id), None
+            )
             if thread_name is not None:
                 #if we have seen this thread before, get the thread history
                 self.prepare_thread_history(thread_id)
@@ -234,15 +228,9 @@ class OAI_Assistant():
         """
         if self.threads is not None:
             return self.threads
-        else:
-             #attempt to read the thread_ids.json file
-            thread_ids = self.read_json('thread_ids.json')
+        thread_ids = self.read_json('thread_ids.json')
             #if the file is empty, return an empty dict
-            if thread_ids is None:
-                return {}
-            else:
-                #if the file is not empty, return the dict
-                return thread_ids
+        return {} if thread_ids is None else thread_ids
 
     def add_thread(self, thread_name, thread_id):
         """

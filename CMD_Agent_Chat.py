@@ -25,7 +25,7 @@ def get_multiple_choice_input(options):
     while True:
         try:
             choice = input('>>> ')
-            if choice == "Q" or choice == "q" or choice == "Quit" or choice == "quit" or choice == "exit":
+            if choice in ["Q", "q", "Quit", "quit", "exit"]:
                 return None
             choice = int(choice)
             if choice > len(options) or choice < 1:
@@ -54,7 +54,7 @@ def setup_assistant_chat(the_assistant: OAI_Assistant):
     # Print list in a readable format it is a SyncCursorPage
     message_user('List of assistants:')
     local_assistants = []
-    for i, assistant in enumerate(assistants.data):
+    for assistant in assistants.data:
         local_assistants.append(assistant.name)
 
     # Lets ask the user to select an assistant
@@ -99,9 +99,7 @@ def swap_Thread(assistant: OAI_Assistant):
     if selected == "Name":
         message_user("Please enter the name of the thread")
         thread_name = get_input()
-        thread_id = setup_thread(assistant, input_thread_name=thread_name)
-        return thread_id
-    # If the user selected ID, ask for the ID
+        return setup_thread(assistant, input_thread_name=thread_name)
     elif selected == "ID":
         message_user("Please enter the ID of the thread")
         thread_id = get_input()
@@ -125,7 +123,7 @@ def main_run(assistant: OAI_Assistant, assistant_id,thread_id):
         # Q for quit, new for new thread. takes one arg "thread Name" and saved the ID to the assistant object appropriately
         # swapA is for swapping the assistant, it initiates the agent selection process again
 
-        if message == "Q" or message == "q":
+        if message in ["Q", "q"]:
             break
         elif message == "swapT":
             thread_swapped = swap_Thread(assistant)
@@ -151,9 +149,8 @@ def main_run(assistant: OAI_Assistant, assistant_id,thread_id):
                 for message in message_list.data:
                     if message.id in assistant.chat_ids:
                         continue
-                    else:
-                        message_user(f'assistant: {message.content[0].text.value}')
-                        assistant.chat_ids.append(message.id)
+                    message_user(f'assistant: {message.content[0].text.value}')
+                    assistant.chat_ids.append(message.id)
                 break
             elif run.status == "failed":
                 message_user("The run failed.")
