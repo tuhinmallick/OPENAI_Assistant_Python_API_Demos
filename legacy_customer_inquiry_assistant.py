@@ -25,14 +25,9 @@ async def create_agent(Assistant_config):
     tools = Assistant_config["tools"]
     model = Assistant_config["model"]
 
-    assistant_id = await client.find_or_create_assistant(
-        send_name=name,
-        instructions=instructions,
-        tools=tools,
-        model=model
+    return await client.find_or_create_assistant(
+        send_name=name, instructions=instructions, tools=tools, model=model
     )
-
-    return assistant_id
 
 # Function to handle customer inquiries
 async def handle_customer_inquiries():

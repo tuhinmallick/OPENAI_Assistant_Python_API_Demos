@@ -340,15 +340,6 @@ class OAI_Agent():
                 # Update the assistant with new arguments
                 await self.update_assistant(assistant_id, name=send_name, description=existing_assistant.description, instructions=instructions, tools=tools)
 
-            # Update or confirm the assistant information in the JSON file
-            data[send_name] = {
-                'id': assistant_id,
-                'instructions': instructions,
-                'tools': tools,
-                'model': model
-            }
-            self.write_json(self.assistant_file, data)
-            return assistant_id
         else:
             # Create a new assistant
             assistant = await self.client.beta.assistants.create(
@@ -359,15 +350,16 @@ class OAI_Agent():
             )
             assistant_id = assistant.id
 
-            # Save the new assistant information in the JSON file
-            data[send_name] = {
-                'id': assistant_id,
-                'instructions': instructions,
-                'tools': tools,
-                'model': model
-            }
-            self.write_json(self.assistant_file, data)
-            return assistant_id
+
+        # Update or confirm the assistant information in the JSON file
+        data[send_name] = {
+            'id': assistant_id,
+            'instructions': instructions,
+            'tools': tools,
+            'model': model
+        }
+        self.write_json(self.assistant_file, data)
+        return assistant_id
 
 
 
@@ -400,7 +392,7 @@ class OAI_Agent():
 
         return await self.client.beta.assistants.update(assistant_id, **update_fields)
 
-    def count_tokens(text):
+    def count_tokens(self):
         """
         Counts the number of tokens in a given text string using gpt3_tokenizer.
 
@@ -410,7 +402,7 @@ class OAI_Agent():
         Returns:
             int: The number of tokens in the text.
         """
-        return gpt3_tokenizer.count_tokens(text)
+        return gpt3_tokenizer.count_tokens(self)
 
 
     async def send_message(self,thread_id, content, role="user"):
@@ -496,7 +488,14 @@ class OAI_Agent():
 
         # Retrieve the latest response
         response = await self.client.beta.threads.messages.list(thread_id=thread_id)
-        for message in response.data:
-            if message.role == "assistant":
-                return message.content[0].text.value, self.count_tokens(message.content[0].text.value)
-        return None, 0
+        return next(
+            (
+                (
+                    message.content[0].text.value,
+                    self.count_tokens(message.content[0].text.value),
+                )
+                for message in response.data
+                if message.role == "assistant"
+            ),
+            (None, 0),
+        )
